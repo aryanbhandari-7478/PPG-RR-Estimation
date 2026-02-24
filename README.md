@@ -80,7 +80,7 @@ Usage in models:
 
 ### 2. LightGBM (LGBM)
 
-- **Baseline LGBM:** Default parameters, 8 features  
+- **Baseline LGBM:** Default parameters, 12 features  
 - **Tuned LGBM:** Optimized via **GridSearchCV** over max_depth, num_leaves, learning_rate, subsample, colsample_bytree  
 
 ---
@@ -110,23 +110,24 @@ Usage in models:
 ```bash
 pip install -r requirements.txt
 ```
-2. Load a Model
+### 2. Load a Model
 import joblib
 
-# Load tuned LGBM model
+#### Load tuned LGBM model
 model_lgbm = joblib.load("models/best_lgbm_rr_pipeline.pkl")
 
-# Load highly tuned RF model
+#### Load highly tuned RF model
 model_rf = joblib.load("models/best_RF2_rr_pipeline.pkl")
-3. Prepare Input Features
 
-Note:
+
+### 3. Prepare Input Features
 
 Tuned models: use top 8 features
-
 Baseline models: use all 12 features
 
-Sample Input for 8-feature Models (Tuned)
+### Sample Input for 8-Feature Models (Tuned)
+
+```python
 import numpy as np
 
 X_sample_8 = np.array([
@@ -136,19 +137,65 @@ X_sample_8 = np.array([
     [0.12, 0.35, 0.28, 0.44, 0.21, 0.18, 0.31, 0.25],
     [0.11, 0.36, 0.29, 0.43, 0.20, 0.19, 0.30, 0.24]
 ])
-Sample Input for 12-feature Models (Baseline)
-X_sample_12 = np.array([
-    [0.12,0.35,0.28,0.44,0.21,0.18,0.31,0.25,0.02,0.05,0.03,0.01],
-    [0.11,0.36,0.29,0.43,0.20,0.19,0.30,0.24,0.01,0.06,0.02,0.02],
-    [0.13,0.34,0.27,0.45,0.22,0.17,0.32,0.26,0.03,0.04,0.01,0.03],
-    [0.12,0.35,0.28,0.44,0.21,0.18,0.31,0.25,0.02,0.05,0.03,0.01],
-    [0.11,0.36,0.29,0.43,0.20,0.19,0.30,0.24,0.01,0.06,0.02,0.02]
+```
+
+### Sample Input for 8-Feature Models (Tuned)
+
+```python
+import numpy as np
+
+X_sample_8 = np.array([
+    [0.12, 0.35, 0.28, 0.44, 0.21, 0.18, 0.31, 0.25],
+    [0.11, 0.36, 0.29, 0.43, 0.20, 0.19, 0.30, 0.24],
+    [0.13, 0.34, 0.27, 0.45, 0.22, 0.17, 0.32, 0.26],
+    [0.12, 0.35, 0.28, 0.44, 0.21, 0.18, 0.31, 0.25],
+    [0.11, 0.36, 0.29, 0.43, 0.20, 0.19, 0.30, 0.24]
 ])
-4. Make Predictions
-# Predictions for tuned 8-feature model
+```
+### 4. Make Predictions
+#### Predictions for tuned 8-feature model
+```python
 y_pred_8 = model_lgbm.predict(X_sample_8)
 print("Predictions (8-feature model):", y_pred_8)
+```
 
-# Predictions for baseline 12-feature model
+#### Predictions for baseline 12-feature model
+```python
 y_pred_12 = model_rf.predict(X_sample_12)
 print("Predictions (12-feature model):", y_pred_12)
+```
+
+
+---
+
+### 🔹 Compare All Models on Same Input
+
+```python
+models = {
+    "Baseline RF (12F)": joblib.load("models/RF_rr_pipeline.pkl"),
+    "Baseline LGBM (12F)": joblib.load("models/LGBM_rr_pipeline.pkl"),
+    "Lightly Tuned RF (8F)": joblib.load("models/best_RF1_rr_pipeline.pkl"),
+    "Highly Tuned RF (8F)": joblib.load("models/best_RF2_rr_pipeline.pkl"),
+    "Tuned LGBM (8F)": joblib.load("models/best_lgbm_rr_pipeline.pkl"),
+}
+
+print("----- 12 Feature Models -----")
+print("Baseline RF:", models["Baseline RF (12F)"].predict(X_sample_12))
+print("Baseline LGBM:", models["Baseline LGBM (12F)"].predict(X_sample_12))
+
+print("\n----- 8 Feature Models -----")
+print("Light RF:", models["Lightly Tuned RF (8F)"].predict(X_sample_8))
+print("High RF:", models["Highly Tuned RF (8F)"].predict(X_sample_8))
+print("Tuned LGBM:", models["Tuned LGBM (8F)"].predict(X_sample_8))
+```
+
+
+## Final Performance Summary
+
+- Best MAE: ~2.10 bpm (Highly Tuned RF)
+- Most Stable Model: Baseline RF
+- Most Sensitive Model: LightGBM
+- Most Important Features: Frequency-domain features
+
+Conclusion:
+Random Forest performed more consistently on small, subject-wise data compared to boosting-based LightGBM.
